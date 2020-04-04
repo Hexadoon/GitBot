@@ -1,4 +1,4 @@
-CREATE USER 'hexagoon'@'localhost' IDENTIFIED BY 'hexagoon';
+CREATE USER 'hexagoon'@'localhost' IDENTIFIED WITH mysql_native_password BY 'hexagoon';
 CREATE DATABASE users;
 USE users;
 CREATE TABLE users(discord_user VARCHAR(100), github_user VARCHAR(100));
