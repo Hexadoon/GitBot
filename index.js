@@ -30,8 +30,8 @@ client.on('message', msg => {
 									.then(function(issues_json){
 										for(var j = 0; j < issues_json.length; j++){
 											for(var k = 0; k < issues_json[j].assignees.length; k++){
-												if(issues_json[j].assignees[k].login === github_user){
-													msg.reply(issues_json[j].html_url);
+												if(issues_json[j].state === "open" && issues_json[j].assignees[k].login === github_user){
+													msg.reply(issues_json[j].title + "\n\n" + issues_json[j].body + "\n\n" + issues_json[j].html_url);
 												}
 											}
 										}
