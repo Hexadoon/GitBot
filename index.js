@@ -30,7 +30,6 @@ var get_contributions = (repos_json, github_user, i) => {
 		for(var j = 0; j < contributions_json.length; j++){
 			if(contributions_json[j].author.login === github_user){
 				for(var k = 0; k < contributions_json[j].weeks.length; k++){
-					console.log("uwu");
 					additions += contributions_json[j].weeks[k].a;
 					subtractions += contributions_json[j].weeks[k].d;
 				}
