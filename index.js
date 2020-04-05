@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const fetch = require('node-fetch');
 const mysql = require('mysql');
+var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
 const client = new Discord.Client();
 
@@ -14,6 +15,32 @@ const cnxn = mysql.createConnection({
 const errmsg = "an error has occurred, please contact admin."
 
 cnxn.connect();
+
+var get_contributions = (repos_json, github_user, i) => {
+	var contributions_url = repos_json[i].url + "/stats/contributors";
+	var repo_name = repos_json[i].name;
+
+	var additions = 0;
+	var subtractions = 0;
+
+	let xhr = new XMLHttpRequest;
+	xhr.open('GET', contributions_url, false);
+	xhr.onload = function() {
+		var contributions_json = JSON.parse(this.responseText);
+		for(var j = 0; j < contributions_json.length; j++){
+			if(contributions_json[j].author.login === github_user){
+				for(var k = 0; k < contributions_json[j].weeks.length; k++){
+					console.log("uwu");
+					additions += contributions_json[j].weeks[k].a;
+					subtractions += contributions_json[j].weeks[k].d;
+				}
+			}
+		}
+	}
+	xhr.send();
+
+	return (repo_name + " :(" + additions + "+ : " + subtractions + "- )");
+}
 
 client.on('message', msg => {
 	if (!msg.author.bot){
@@ -50,39 +77,11 @@ client.on('message', msg => {
 		}else if(msg.content.toLowerCase().indexOf('!contributions') >= 0){
 			cnxn.query("SELECT github_user FROM users WHERE discord_user = '" + msg.author.tag + "'", (err, request) => {
 					var github_user = JSON.parse(JSON.stringify(request))[0].github_user;
-					var additions = 0;
-					var subtractions = 0;
 					fetch('https://api.github.com/users/hexadoon/repos')
 						.then(repos => repos.json())
-						.then(function(repos_json){
+						.then((repos_json) => {
 							for(var i = 0; i < repos_json.length; i++){
-								var contributions_url = repos_json[i].url + "/stats/contributors";
-								var repo_name = repos_json[i].name;
-								return [contributions_url, repo_name]
-						.then(function(arr){
-							fetch(arr[0])
-								.then(contributions => contributions.json())
-								.then(function(contributions_json, repo_name){
-									for(var j = 0; j < contributions_json.length; j++){
-										if(contributions_json[j].author.login === github_user){
-											for(var k = 0; k < contributions_json[j].weeks.length; k++){
-												additions += contributions_json[j].weeks[k].a;
-												subtractions += contributions_json[j].weeks[k].d;
-											}
-										}
-									}
-										
-									return [additions, subtractions];
-								})
-								.then(function(contribution_values){
-									msg.reply(arr[1] + ":(" + additions + "+ : " + subtractions + "- )");
-									additions = 0;
-									subtractions = 0;
-								})
-								.catch(function(error){
-									console.log(error);
-									msg.reply(errmsg);
-								});
+								msg.reply(get_contributions(repos_json, github_user, i));
 							}
 						})
 						.catch(function(error){
