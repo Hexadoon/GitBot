@@ -47,6 +47,42 @@ client.on('message', msg => {
 							msg.reply(errmsg);
 						});
 				});
+		}else if(msg.content.toLowerCase().indexOf('!contributions') >= 0){
+			cnxn.query("SELECT github_user FROM users WHERE discord_user = '" + msg.author.tag + "'", (err, request) => {
+					var github_user = JSON.parse(JSON.stringify(request))[0].github_user;
+					var additions = 0;
+					var subtractions = 0;
+					fetch('https://api.github.com/users/hexadoon/repos')
+						.then(repos => repos.json())
+						.then(function(repos_json){
+							for(var i = 0; i < repos_json.length; i++){
+								var contributions_url = repos_json[i].url + "/stats/contributors";
+								var repo_name = repos_json[i].name;
+								fetch(contributions_url)
+									.then(contributions => contributions.json())
+									.then(function(contributions_json){
+										for(var j = 0; j < contributions_json.length; j++){
+											if(contributions_json[j].author.login === github_user){
+												for(var k = 0; k < contributions_json[j].weeks.length; k++){
+													additions += contributions_json[j].weeks[k].a;
+													subtractions += contributions_json[j].weeks[k].d;
+												}
+											}
+										}
+
+										msg.reply(repo_name + ":(" + additions + "+ : " + subtractions + "- )");
+									})
+									.catch(function(error){
+										console.log(error);
+										msg.reply(errmsg);
+									});
+							}
+						})
+						.catch(function(error){
+							console.log(error);
+							msg.reply(errmsg);
+						});
+				});
 		}else{
 			const mtns = msg.mentions.users.array();
 			for (var k in mtns){
