@@ -58,24 +58,31 @@ client.on('message', msg => {
 							for(var i = 0; i < repos_json.length; i++){
 								var contributions_url = repos_json[i].url + "/stats/contributors";
 								var repo_name = repos_json[i].name;
-								fetch(contributions_url)
-									.then(contributions => contributions.json())
-									.then(function(contributions_json){
-										for(var j = 0; j < contributions_json.length; j++){
-											if(contributions_json[j].author.login === github_user){
-												for(var k = 0; k < contributions_json[j].weeks.length; k++){
-													additions += contributions_json[j].weeks[k].a;
-													subtractions += contributions_json[j].weeks[k].d;
-												}
+								return [contributions_url, repo_name]
+						.then(function(arr){
+							fetch(arr[0])
+								.then(contributions => contributions.json())
+								.then(function(contributions_json, repo_name){
+									for(var j = 0; j < contributions_json.length; j++){
+										if(contributions_json[j].author.login === github_user){
+											for(var k = 0; k < contributions_json[j].weeks.length; k++){
+												additions += contributions_json[j].weeks[k].a;
+												subtractions += contributions_json[j].weeks[k].d;
 											}
 										}
-
-										msg.reply(repo_name + ":(" + additions + "+ : " + subtractions + "- )");
-									})
-									.catch(function(error){
-										console.log(error);
-										msg.reply(errmsg);
-									});
+									}
+										
+									return [additions, subtractions];
+								})
+								.then(function(contribution_values){
+									msg.reply(arr[1] + ":(" + additions + "+ : " + subtractions + "- )");
+									additions = 0;
+									subtractions = 0;
+								})
+								.catch(function(error){
+									console.log(error);
+									msg.reply(errmsg);
+								});
 							}
 						})
 						.catch(function(error){
