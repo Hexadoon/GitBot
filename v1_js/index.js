@@ -100,4 +100,4 @@ client.on('message', msg => {
 	}
 });
 
-client.login('[INSERT DISCORD BOT TOKEN HERE]');
+client.login('Njk1ODE4MjI0NjAzNzU4NjAz.XogPKg.mOPCe608I8U8Nc89crEZiNhC03E');
