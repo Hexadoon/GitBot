@@ -1,0 +1,1 @@
+CREATE TABLE users(discord_user TEXT NOT NULL, github_user TEXT NOT NULL);
