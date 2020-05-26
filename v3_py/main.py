@@ -31,21 +31,21 @@ def getJSONfromURL(URL):
 	with urllib.request.urlopen(URL) as open_url:
 		return json.loads(open_url.read().decode())
 
-def checkMinutely():
-	while True:
-		crsr.execute("SELECT * FROM reminders")
+# def check_minutely():
+# 	while True:
+# 		crsr.execute("SELECT * FROM reminders")
 
-		all_rem = crsr.fetchall()
+# 		all_rem = crsr.fetchall()
 
-		for rem in all_rem:
-			if rem[0] - time.time() < 3600:
-				notifs = rem[1].split(",")
-				crsr.execute("DELETE FROM reminders WHERE remtime = " + rem[0] ";")
-				crsr.commit()
+# 		for rem in all_rem:
+# 			if rem[0] - time.time() < 3600:
+# 				notifs = rem[1].split(",")
+# 				crsr.execute("DELETE FROM reminders WHERE remtime = " + rem[0] + ";")
+# 				crsr.commit()
 
-				for u in notifs:
-					m = bot.get_user(u)
-					m.dm_channel.send(m.mention + " - Reminder for " + time.strftime('%m/%d/%Y %H:%M', time.localtime(rem[0])))
+# 				for u in notifs:
+# 					m = bot.get_user(u)
+# 					m.dm_channel.send(m.mention + " - Reminder for " + time.strftime('%m/%d/%Y %H:%M', time.localtime(rem[0])))
 
 @client.event
 async def on_message(msg):
@@ -90,22 +90,22 @@ async def on_message(msg):
 	 		for repo in contributions:
 	 			await msg.channel.send(repo + ":(`" + str(contributions[repo][0]) + "`+ ; `" + str(contributions[repo][1]) + "`-)")
 	 	
-	 	elif "!remind" in msg.content:
-	 		time_section = msg.content[msg.content.index('[')+1 : msg.content.index(']')]
-	 		try:
-	 			dt = parser.parse(time_section)
-	 		except:
-	 			await msg.channel.send("Bad time")
+	 	# elif "!remind" in msg.content:
+	 	# 	time_section = msg.content[msg.content.index('[')+1 : msg.content.index(']')]
+	 	# 	try:
+	 	# 		dt = parser.parse(time_section)
+	 	# 	except:
+	 	# 		await msg.channel.send("Bad time")
 
-	 		epoch_time = int(dt.timestamp())
+	 	# 	epoch_time = int(dt.timestamp())
 
-	 		all_users = ""
-	 		for u in msg.mentions:
-	 			all_users += str(u.id) + ","
-	 		all_users += str(msg.author.id)
+	 	# 	all_users = ""
+	 	# 	for u in msg.mentions:
+	 	# 		all_users += str(u.id) + ","
+	 	# 	all_users += str(msg.author.id)
 
-	 		crsr.execute("INSERT INTO reminders VALUES(" + epoch_time + ", '" + all_users + "');")
-	 		crsr.commit()
+	 	# 	crsr.execute("INSERT INTO reminders VALUES(" + str(epoch_time) + ", '" + all_users + "');")
+	 	# 	crsr.commit()
 
-reminders_thread = Thread(target = check_minutely)
+# reminders_thread = Thread(target = check_minutely)
 client.run('[INSERT DISCORD BOT TOKEN HERE]')
