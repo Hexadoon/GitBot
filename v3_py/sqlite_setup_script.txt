@@ -1,1 +1,2 @@
 CREATE TABLE users(discord_user TEXT NOT NULL, github_user TEXT NOT NULL);
+CREATE TABLE reminders(remtime INTEGER NOT NULL, who TEXT NOT NULL);

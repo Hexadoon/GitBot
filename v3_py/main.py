@@ -3,6 +3,10 @@ import sqlite3
 import urllib.request
 import json 
 import sys
+from datetime import datetime
+import time
+from dateutil import parser
+from threading import Thread
 
 client = discord.Client()
 
@@ -27,14 +31,32 @@ def getJSONfromURL(URL):
 	with urllib.request.urlopen(URL) as open_url:
 		return json.loads(open_url.read().decode())
 
+def checkMinutely():
+	while True:
+		crsr.execute("SELECT * FROM reminders")
+
+		all_rem = crsr.fetchall()
+
+		for rem in all_rem:
+			if rem[0] - time.time() < 3600:
+				notifs = rem[1].split(",")
+				crsr.execute("DELETE FROM reminders WHERE remtime = " + rem[0] ";")
+				crsr.commit()
+
+				for u in notifs:
+					m = bot.get_user(u)
+					m.dm_channel.send(m.mention + " - Reminder for " + time.strftime('%m/%d/%Y %H:%M', time.localtime(rem[0])))
+
 @client.event
 async def on_message(msg):
 	msg_author = msg.author.name + "#" + str(msg.author.discriminator)
 	if not msg.author.bot:
+
 	 	if "!issues" in msg.content:
 	 		issues_list = []
 	 		github_user = getGitUser(msg_author)
 	 		repos_json = getJSONfromURL(org_repos_url)
+
 	 		for repo in repos_json:
 	 			issues_json = getJSONfromURL((repo["issues_url"])[:-9]) # index may change depending on github api
 	 			for issue in issues_json:
@@ -45,12 +67,14 @@ async def on_message(msg):
 	 		await msg.channel.send(msg.author.mention + ", you have `" + str(len(issues_list)) + "` unresolved issues.")
 	 		for issue in issues_list:
 	 			await msg.channel.send(issue)
+
 	 	elif "!contributions" in msg.content:
 	 		contributions = {}
 	 		additions_total = 0
 	 		deletions_total = 0
 	 		github_user = getGitUser(msg_author)
 	 		repos_json = getJSONfromURL(org_repos_url)
+
 	 		for repo in repos_json:
 	 			repo_name = repo["name"]
 	 			contributions_json = getJSONfromURL(repo["url"] + "/stats/contributors")
@@ -65,5 +89,23 @@ async def on_message(msg):
 	 		await msg.channel.send(msg.author.mention + ", you have made `" + str(additions_total) + "` additions and `" + str(deletions_total) + "` deletions.")
 	 		for repo in contributions:
 	 			await msg.channel.send(repo + ":(`" + str(contributions[repo][0]) + "`+ ; `" + str(contributions[repo][1]) + "`-)")
+	 	
+	 	elif "!remind" in msg.content:
+	 		time_section = msg.content[msg.content.index('[')+1 : msg.content.index(']')]
+	 		try:
+	 			dt = parser.parse(time_section)
+	 		except:
+	 			await msg.channel.send("Bad time")
 
+	 		epoch_time = int(dt.timestamp())
+
+	 		all_users = ""
+	 		for u in msg.mentions:
+	 			all_users += str(u.id) + ","
+	 		all_users += str(msg.author.id)
+
+	 		crsr.execute("INSERT INTO reminders VALUES(" + epoch_time + ", '" + all_users + "');")
+	 		crsr.commit()
+
+reminders_thread = Thread(target = check_minutely)
 client.run('[INSERT DISCORD BOT TOKEN HERE]')
