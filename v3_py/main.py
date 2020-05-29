@@ -25,6 +25,9 @@ def getGitUser(discordUser):
 	rtrn = []
 	for (github_user) in crsr:
 		rtrn.append(github_user)
+
+	if len(rtrn) == 0:
+		return None
 	return rtrn[0][0]
 
 def getJSONfromURL(URL):
@@ -57,16 +60,19 @@ async def on_message(msg):
 	 		github_user = getGitUser(msg_author)
 	 		repos_json = getJSONfromURL(org_repos_url)
 
-	 		for repo in repos_json:
-	 			issues_json = getJSONfromURL((repo["issues_url"])[:-9]) # index may change depending on github api
-	 			for issue in issues_json:
-	 				if issue["state"] == "open":
-	 					for assignee in issue["assignees"]:
-	 						if assignee["login"] == github_user:
-	 							issues_list.append(issue["title"] + "\n\n" + issue["body"] + "\n\n" + issue["html_url"])
-	 		await msg.channel.send(msg.author.mention + ", you have `" + str(len(issues_list)) + "` unresolved issues.")
-	 		for issue in issues_list:
-	 			await msg.channel.send(issue)
+	 		if github_user != None:
+		 		for repo in repos_json:
+		 			issues_json = getJSONfromURL((repo["issues_url"])[:-9]) # index may change depending on github api
+		 			for issue in issues_json:
+		 				if issue["state"] == "open":
+		 					for assignee in issue["assignees"]:
+		 						if assignee["login"] == github_user:
+		 							issues_list.append(issue["title"] + "\n\n" + issue["body"] + "\n\n" + issue["html_url"])
+		 		await msg.channel.send(msg.author.mention + ", you have `" + str(len(issues_list)) + "` unresolved issues.")
+		 		for issue in issues_list:
+		 			await msg.channel.send(issue)
+		 	else:
+		 		await msg.channel.send("User not in database")
 
 	 	elif "!contributions" in msg.content:
 	 		contributions = {}
@@ -75,21 +81,23 @@ async def on_message(msg):
 	 		github_user = getGitUser(msg_author)
 	 		repos_json = getJSONfromURL(org_repos_url)
 
-	 		for repo in repos_json:
-	 			repo_name = repo["name"]
-	 			contributions_json = getJSONfromURL(repo["url"] + "/stats/contributors")
-	 			for user_contributions in contributions_json:
-	 				if user_contributions["author"]["login"] == github_user:
-	 					contributions[repo_name] = [0, 0]
-	 					for week in user_contributions["weeks"]:
-	 						contributions[repo_name][0] += week["a"]
-	 						additions_total += week["a"]
-	 						contributions[repo_name][1] += week["d"]
-	 						deletions_total += week["d"]
-	 		await msg.channel.send(msg.author.mention + ", you have made `" + str(additions_total) + "` additions and `" + str(deletions_total) + "` deletions.")
-	 		for repo in contributions:
-	 			await msg.channel.send(repo + ":(`" + str(contributions[repo][0]) + "`+ ; `" + str(contributions[repo][1]) + "`-)")
-	 	
+	 		if github_user != None:
+		 		for repo in repos_json:
+		 			repo_name = repo["name"]
+		 			contributions_json = getJSONfromURL(repo["url"] + "/stats/contributors")
+		 			for user_contributions in contributions_json:
+		 				if user_contributions["author"]["login"] == github_user:
+		 					contributions[repo_name] = [0, 0]
+		 					for week in user_contributions["weeks"]:
+		 						contributions[repo_name][0] += week["a"]
+		 						additions_total += week["a"]
+		 						contributions[repo_name][1] += week["d"]
+		 						deletions_total += week["d"]
+		 		await msg.channel.send(msg.author.mention + ", you have made `" + str(additions_total) + "` additions and `" + str(deletions_total) + "` deletions.")
+		 		for repo in contributions:
+		 			await msg.channel.send(repo + ":(`" + str(contributions[repo][0]) + "`+ ; `" + str(contributions[repo][1]) + "`-)")
+	 		else:
+		 		await msg.channel.send("User not in database")
 	 	# elif "!remind" in msg.content:
 	 	# 	time_section = msg.content[msg.content.index('[')+1 : msg.content.index(']')]
 	 	# 	try:
