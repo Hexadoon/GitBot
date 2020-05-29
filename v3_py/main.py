@@ -56,8 +56,16 @@ async def on_message(msg):
 	if not msg.author.bot:
 
 	 	if "!issues" in msg.content:
+
+	 		github_user = ""
+
+	 		if len(msg.mentions) > 0:
+	 			target = msg.mentions[0].name + "#" + str(msg.mentions[0].discriminator)
+	 			github_user = getGitUser(target)
+	 		else:
+	 			github_user = getGitUser(msg_author)
+
 	 		issues_list = []
-	 		github_user = getGitUser(msg_author)
 	 		repos_json = getJSONfromURL(org_repos_url)
 
 	 		if github_user != None:
@@ -68,17 +76,32 @@ async def on_message(msg):
 		 					for assignee in issue["assignees"]:
 		 						if assignee["login"] == github_user:
 		 							issues_list.append(issue["title"] + "\n\n" + issue["body"] + "\n\n" + issue["html_url"])
-		 		await msg.channel.send(msg.author.mention + ", you have `" + str(len(issues_list)) + "` unresolved issues.")
+		 		
+		 		target = ""
+		 		if len(msg.mentions) > 0:
+		 			target = msg.mentions[0]
+		 		else:
+		 			target = msg.author
+
+		 		await msg.channel.send(target.mention + ", you have `" + str(len(issues_list)) + "` unresolved issues.")
 		 		for issue in issues_list:
 		 			await msg.channel.send(issue)
 		 	else:
 		 		await msg.channel.send("User not in database")
 
 	 	elif "!contributions" in msg.content:
+
+	 		github_user = ""
+	 		
+	 		if len(msg.mentions) > 0:
+	 			target = msg.mentions[0].name + "#" + str(msg.mentions[0].discriminator)
+	 			github_user = getGitUser(target)
+	 		else:
+	 			github_user = getGitUser(msg_author)
+
 	 		contributions = {}
 	 		additions_total = 0
 	 		deletions_total = 0
-	 		github_user = getGitUser(msg_author)
 	 		repos_json = getJSONfromURL(org_repos_url)
 
 	 		if github_user != None:
@@ -93,7 +116,14 @@ async def on_message(msg):
 		 						additions_total += week["a"]
 		 						contributions[repo_name][1] += week["d"]
 		 						deletions_total += week["d"]
-		 		await msg.channel.send(msg.author.mention + ", you have made `" + str(additions_total) + "` additions and `" + str(deletions_total) + "` deletions.")
+
+		 		target = ""
+		 		if len(msg.mentions) > 0:
+		 			target = msg.mentions[0]
+		 		else:
+		 			target = msg.author
+
+		 		await msg.channel.send(target.mention + ", you have made `" + str(additions_total) + "` additions and `" + str(deletions_total) + "` deletions.")
 		 		for repo in contributions:
 		 			await msg.channel.send(repo + ":(`" + str(contributions[repo][0]) + "`+ ; `" + str(contributions[repo][1]) + "`-)")
 	 		else:
